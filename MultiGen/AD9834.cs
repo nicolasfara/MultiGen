@@ -64,7 +64,7 @@ namespace MultiGen
         /***************************************************************************//**
          * @brief Initializes the SPI communication peripheral and resets the part.
          *
-         * @return 1.
+         * @return None.
         *******************************************************************************/
         public void AD9834_Init()
         {
