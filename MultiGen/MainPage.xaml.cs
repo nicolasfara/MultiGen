@@ -29,7 +29,7 @@ namespace MultiGen
         {
             this.InitializeComponent();
             wave.AD9834_Init();
-            Dac.initDac();
+            Dac.initDac();            
         }
     }
 }

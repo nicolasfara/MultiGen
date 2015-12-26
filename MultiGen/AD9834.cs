@@ -127,10 +127,11 @@ namespace MultiGen
         {
             try
             {
+                ulong regFreq = (val * 2 ^ 28) / 50000000;
                 ushort freqHi = reg;
                 ushort freqLo = reg;
-                freqHi = (ushort)(freqHi | (val & 0xFFFC000) >> 14);
-                freqLo = (ushort)(freqLo | (val & 0x3FFF));
+                freqHi = (ushort)(freqHi | (regFreq & 0xFFFC000) >> 14);
+                freqLo = (ushort)(freqLo | (regFreq & 0x3FFF));
                 AD9834_SetRegisterValue(AD9834_B28);
                 AD9834_SetRegisterValue(freqLo);
                 AD9834_SetRegisterValue(freqHi);
@@ -154,8 +155,9 @@ namespace MultiGen
         {
             try
             {
+                ulong regPhase = (val * 4096) / 360;
                 ushort phase = reg;
-                phase = (ushort)(phase | val);
+                phase = (ushort)(phase | regPhase);
                 AD9834_SetRegisterValue(phase);
             }
             catch(Exception ex)
