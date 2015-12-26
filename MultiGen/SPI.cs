@@ -41,6 +41,14 @@ namespace MultiGen
             OffAll,
         };
 
+        public enum enableRegister
+        {
+            FselecOn = 1,
+            FselectOff = 0,
+            PselectOn = 1,
+            PselectOff = 0,
+        };
+
         /* Initialize the SPI bus */
         private async Task InitSpi()
         {
@@ -153,6 +161,7 @@ namespace MultiGen
             }
         }
 
+
         public void writeSpi(ushort reg)
         {
             try
@@ -165,6 +174,32 @@ namespace MultiGen
             catch(Exception ex)
             {
                 Debug.WriteLine("Error write SPI: {0}", ex.Message);
+            }
+        }
+
+
+        public void writePSELEC(enableRegister select)
+        {
+            if ((int)select == 1)
+            {
+                PSelect.Write(GpioPinValue.High);
+            }
+            else
+            {
+                PSelect.Write(GpioPinValue.Low);
+            }
+        }
+
+
+        public void writeFSELEC(enableRegister select)
+        {
+            if ((int)select == 1)
+            {
+                FSelect.Write(GpioPinValue.High);
+            }
+            else
+            {
+                FSelect.Write(GpioPinValue.Low);
             }
         }
     }

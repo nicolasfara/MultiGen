@@ -29,7 +29,8 @@ namespace MultiGen
         {
             this.InitializeComponent();
             wave.AD9834_Init();
-            Dac.initDac();            
+            Dac.initDac();
+            wave.AD9834_Setup(AD9834.AD9834_FSEL0, AD9834.AD9834_PSEL0, AD9834.AD9834_OUT_SINUS, 0);            
         }
     }
 }

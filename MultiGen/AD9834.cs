@@ -19,10 +19,10 @@ namespace MultiGen
         /* Command Control Bits */
         private const ushort AD9834_B28 = (1 << 13);
         private const ushort AD9834_HLB = (1 << 12);
-        private const ushort AD9834_FSEL0 = (0 << 11);
-        private const ushort AD9834_FSEL1 = (1 << 11);
-        private const ushort AD9834_PSEL0 = (0 << 10);
-        private const ushort AD9834_PSEL1 = (1 << 10);
+        public const ushort AD9834_FSEL0 = (0 << 11);
+        public const ushort AD9834_FSEL1 = (1 << 11);
+        public const ushort AD9834_PSEL0 = (0 << 10);
+        public const ushort AD9834_PSEL1 = (1 << 10);
         private const ushort AD9834_CMD_PIN = (1 << 9);
         private const ushort AD9834_CMD_SW = (0 << 9);
         private const ushort AD9834_RESET = (1 << 8);
@@ -182,6 +182,25 @@ namespace MultiGen
             {
                 ushort val = 0;
                 val = (ushort)(freq | phase | type | commandType);
+                if(commandType == 1)
+                {
+                    if(freq == 1)
+                    {
+                        Spi.writeFSELEC(SPI.enableRegister.FselecOn);
+                    }
+                    else
+                    {
+                        Spi.writeFSELEC(SPI.enableRegister.FselectOff);
+                    }
+                    if(phase == 1)
+                    {
+                        Spi.writePSELEC(SPI.enableRegister.PselectOn);
+                    }
+                    else
+                    {
+                        Spi.writePSELEC(SPI.enableRegister.PselectOff);
+                    }
+                }
                 AD9834_SetRegisterValue(val);
             }
             catch(Exception ex)
