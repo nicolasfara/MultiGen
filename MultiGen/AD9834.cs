@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using Windows.Devices.Enumeration;
 using Windows.Devices.Spi;
 using Windows.Devices.Gpio;
-using MultiGen;
 
 namespace MultiGen
 {
@@ -74,7 +70,7 @@ namespace MultiGen
                     Debug.WriteLine("SPI {0} initialized not completed, SPI is busy", dis[0].Id);
                     return;
                 }
-                Debug.WriteLine("SPI {0} initialize", dis[0].Id);
+                Debug.WriteLine("SPI AD9834 initialize");
             }
 
             catch (Exception ex)
@@ -123,7 +119,7 @@ namespace MultiGen
             {
                 await InitSpi();
                 InitGpio();
-                Debug.WriteLine("Inizialized AD9834");
+                Debug.WriteLine("Initialized AD9834");
             }
             catch (Exception ex)
             {

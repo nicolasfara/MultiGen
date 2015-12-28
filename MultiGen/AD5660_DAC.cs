@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
-using MultiGen;
 using Windows.Devices.Enumeration;
 using Windows.Devices.Gpio;
 using Windows.Devices.Spi;
@@ -14,7 +10,7 @@ namespace MultiGen
     class AD5660_DAC
     {
         private const string SPI_CONTROLLER_NAME = "SPI0";  /* For Raspberry Pi 2, use SPI0                             */
-        private const Int32 SPI_CHIP_SELECT_LINE = 1;       /* Line 0 maps to physical pin number 24 on the Rpi2        */
+        private const Int32 SPI_CHIP_SELECT_LINE = 1;       /* Line 1 maps to physical pin number 24 on the Rpi2        */
 
         private SpiDevice SpiDac;
         private GpioController CsController;
@@ -41,7 +37,7 @@ namespace MultiGen
                     Debug.WriteLine("SPI {0} initialized not completed, SPI is busy", dis[0].Id);
                     return;
                 }
-                Debug.WriteLine("SPI {0} initialize", dis[0].Id);
+                Debug.WriteLine("SPI AD5660 initialize");
             }
 
             catch (Exception ex)
@@ -119,8 +115,6 @@ namespace MultiGen
                 byte[] wordLo = { (byte)((word & 0x00FF) >> 0) };  
                 CsAD5660_O.Write(GpioPinValue.Low);
                 SpiDac.Write(wordHi);
-                CsAD5660_O.Write(GpioPinValue.High);
-                CsAD5660_O.Write(GpioPinValue.Low);
                 SpiDac.Write(wordLo);
                 CsAD5660_O.Write(GpioPinValue.High);
                 Debug.WriteLine("AD5660 write offset complete");
@@ -149,8 +143,6 @@ namespace MultiGen
                 byte[] wordLo = { (byte)((word & 0x00FF) >> 8) };
                 CsAD5660_A.Write(GpioPinValue.Low);
                 SpiDac.Write(wordHi);
-                CsAD5660_A.Write(GpioPinValue.High);
-                CsAD5660_A.Write(GpioPinValue.Low);
                 SpiDac.Write(wordLo);
                 CsAD5660_A.Write(GpioPinValue.High);
                 Debug.WriteLine("AD5660 write amplitude complete");
