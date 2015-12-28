@@ -4,11 +4,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using Windows.Devices.Enumeration;
+using Windows.Devices.Spi;
+using Windows.Devices.Gpio;
+using MultiGen;
 
 namespace MultiGen
 {
-    class AD9834
+    public class AD9834
     {
+        MultiGen.SPI Spi = new MultiGen.SPI();
+
         /* Registers */
         private const ushort AD9834_REG_CMD = (0 << 14);
         private const ushort AD9834_REG_FREQ0 = (1 << 14);
@@ -37,7 +43,7 @@ namespace MultiGen
 
 
         /* Create new istance */
-        MultiGen.SPI Spi = new MultiGen.SPI();
+        
 
         /***************************************************************************//**
          * @brief Writes the value to a register.
@@ -50,9 +56,10 @@ namespace MultiGen
         {
             try
             {
-                Spi.enableCs(SPI.EnableChip.AD9834);
-                Spi.writeSpi(regValue);
-                Spi.enableCs(SPI.EnableChip.OffAll);
+                //Spi.enableCs(SPI.EnableChip.AD9834);
+                Spi.writeSpi(regValue, SPI.EnableChip.AD9834);
+                //Spi.enableCs(SPI.EnableChip.OffAll);
+                Debug.WriteLine("Write register complete");
             } 
             catch(Exception ex)
             {
@@ -125,20 +132,22 @@ namespace MultiGen
         *******************************************************************************/
         public void AD9834_SetFrequency(ushort reg, ulong val)
         {
+            
             try
             {
+                SPI SPI = new SPI();
                 ulong regFreq = (val * 2 ^ 28) / 50000000;
                 ushort freqHi = reg;
                 ushort freqLo = reg;
                 freqHi = (ushort)(freqHi | (regFreq & 0xFFFC000) >> 14);
                 freqLo = (ushort)(freqLo | (regFreq & 0x3FFF));
-                AD9834_SetRegisterValue(AD9834_B28);
-                AD9834_SetRegisterValue(freqLo);
-                AD9834_SetRegisterValue(freqHi);
+                SPI.writeSpi(AD9834_B28, SPI.EnableChip.AD9834);
+                SPI.writeSpi(freqLo, SPI.EnableChip.AD9834);
+                SPI.writeSpi(freqHi, SPI.EnableChip.AD9834);
             }
             catch (Exception ex)
             {
-                Debug.WriteLine("Error write frequency register AD9834: {0}", ex.Message);
+                Debug.WriteLine("Error write frequency register AD9834: {0}", ex);
             }
         }
 

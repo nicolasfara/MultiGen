@@ -7,11 +7,12 @@ using System.Diagnostics;
 using Windows.Devices.Enumeration;
 using Windows.Devices.Spi;
 using Windows.Devices.Gpio;
+using MultiGen;
 
 
 namespace MultiGen
 {
-    class SPI
+    public class SPI
     {
         private const string SPI_CONTROLLER_NAME = "SPI0";  /* For Raspberry Pi 2, use SPI0                             */
         private const Int32 SPI_CHIP_SELECT_LINE = 0;       /* Line 0 maps to physical pin number 24 on the Rpi2        */
@@ -71,7 +72,7 @@ namespace MultiGen
 
             catch(Exception ex)
             {
-                Debug.WriteLine("SPI initialization fail", ex);
+                Debug.WriteLine("SPI initialization fail"+ ex.Message);
                 return;
             }
         }
@@ -119,13 +120,13 @@ namespace MultiGen
         {
             try
             {
-                InitGpio();
                 await InitSpi();
-                Debug.WriteLine("Inizialized");
+                InitGpio();                
+                Debug.WriteLine("Inizialized");                
             }
             catch (Exception ex)
             {
-                Debug.WriteLine("Initialization fail:", ex.Message);
+                Debug.WriteLine("Initialization fail: "+ ex.Message);
             }
         }
 
@@ -138,6 +139,7 @@ namespace MultiGen
                     CsAD9834.Write(GpioPinValue.Low);
                     CsAD5660_A.Write(GpioPinValue.High);
                     CsAD5660_O.Write(GpioPinValue.High);
+                    Debug.WriteLine("OK");
                     break;
                 case EnableChip.Amplitude:
                     CsAD9834.Write(GpioPinValue.High);
@@ -161,23 +163,26 @@ namespace MultiGen
             }
         }
 
-
-        public void writeSpi(ushort reg)
+        /* Write data on SPI */
+        public void writeSpi(ushort reg, EnableChip cs)
         {
             try
             {
+                enableCs(cs);
                 byte[] word = { 0x00, 0x00 };
                 word[0] = (byte)((reg & 0xFF00) >> 8);
                 word[1] = (byte)((reg & 0x00FF) >> 0);
                 SpiMultiGen.Write(word);
+                Debug.WriteLine("SPI write correctly");
+                enableCs(EnableChip.OffAll);
             }
             catch(Exception ex)
             {
-                Debug.WriteLine("Error write SPI: {0}", ex.Message);
+                Debug.WriteLine("Error write SPI: {0}", ex);
             }
         }
 
-
+        /* Write on phase register */
         public void writePSELEC(enableRegister select)
         {
             if ((int)select == 1)
@@ -190,7 +195,7 @@ namespace MultiGen
             }
         }
 
-
+        /*Write on frequency register */
         public void writeFSELEC(enableRegister select)
         {
             if ((int)select == 1)
@@ -202,5 +207,6 @@ namespace MultiGen
                 FSelect.Write(GpioPinValue.Low);
             }
         }
+
     }
 }
