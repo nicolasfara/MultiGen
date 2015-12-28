@@ -13,8 +13,7 @@ namespace MultiGen
 {
     public class AD9834
     {
-        MultiGen.SPI Spi = new MultiGen.SPI();
-
+        
         /* Registers */
         private const ushort AD9834_REG_CMD = (0 << 14);
         private const ushort AD9834_REG_FREQ0 = (1 << 14);
@@ -41,9 +40,115 @@ namespace MultiGen
         public const ushort AD9834_OUT_SINUS = ((0 << 5) | (0 << 1));
         public const ushort AD9834_OUT_TRIANGLE = ((0 << 5) | (1 << 1));
 
+        private const int CS0 = 26;
+        private const int FSELECT = 5;
+        private const int PSELECT = 6;
+        private const int RESET = 13;
+        private const int SLEEP = 19;
 
-        /* Create new istance */
-        
+        private const string SPI_CONTROLLER_NAME = "SPI0";  /* For Raspberry Pi 2, use SPI0                             */
+        private const Int32 SPI_CHIP_SELECT_LINE = 0;       /* Line 0 maps to physical pin number 24 on the Rpi2        */
+
+        private SpiDevice AD9834_spi;
+        private GpioController CsController;
+        private GpioPin CsAD9834;
+        private GpioPin PSelect;
+        private GpioPin FSelect;
+        private GpioPin Reset;
+
+
+        /* Initialize the SPI bus */
+        private async Task InitSpi()
+        {
+            try
+            {
+                var settings = new SpiConnectionSettings(SPI_CHIP_SELECT_LINE);
+                settings.ClockFrequency = 1000000;
+                settings.Mode = SpiMode.Mode0;
+
+                string spiAqs = SpiDevice.GetDeviceSelector(SPI_CONTROLLER_NAME);
+                var dis = await DeviceInformation.FindAllAsync(spiAqs);
+                AD9834_spi = await SpiDevice.FromIdAsync(dis[0].Id, settings);
+                if (AD9834_spi == null)
+                {
+                    Debug.WriteLine("SPI {0} initialized not completed, SPI is busy", dis[0].Id);
+                    return;
+                }
+                Debug.WriteLine("SPI {0} initialize", dis[0].Id);
+            }
+
+            catch (Exception ex)
+            {
+                Debug.WriteLine("SPI initialization fail" + ex.Message);
+                return;
+            }
+        }
+
+        /* Initialize the Gpio */
+        private void InitGpio()
+        {
+            CsController = GpioController.GetDefault();
+
+            if (CsController == null)
+            {
+                throw new Exception("GPIO do not exist");
+            }
+
+            CsAD9834 = CsController.OpenPin(CS0);
+            CsAD9834.SetDriveMode(GpioPinDriveMode.Output);
+            CsAD9834.Write(GpioPinValue.High);
+            PSelect = CsController.OpenPin(PSELECT);
+            PSelect.SetDriveMode(GpioPinDriveMode.Output);
+            PSelect.Write(GpioPinValue.Low);
+            FSelect = CsController.OpenPin(FSELECT);
+            FSelect.SetDriveMode(GpioPinDriveMode.Output);
+            FSelect.Write(GpioPinValue.Low);
+            Reset = CsController.OpenPin(RESET);
+            Reset.SetDriveMode(GpioPinDriveMode.Output);
+            Reset.Write(GpioPinValue.Low);
+
+            if (CsAD9834 == null || FSelect == null || PSelect == null || Reset == null)
+            {
+                Debug.WriteLine("Pin not open");
+                return;
+            }
+
+            Debug.WriteLine("Gpio inizialized");
+        }
+
+        /* Initialize the Gpio */
+        public async Task InitAD9834()
+        {
+            try
+            {
+                await InitSpi();
+                InitGpio();
+                Debug.WriteLine("Inizialized AD9834");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Initialization fail: " + ex.Message);
+            }
+        }
+
+        public void writeSpi(ushort reg)
+        {
+            try
+            {
+                CsAD9834.Write(GpioPinValue.Low);
+                byte[] word = { 0x00, 0x00 };
+                word[0] = (byte)((reg & 0xFF00) >> 8);
+                word[1] = (byte)((reg & 0x00FF) >> 0);
+                AD9834_spi.Write(word);
+                CsAD9834.Write(GpioPinValue.High);
+                Debug.WriteLine("SPI write correctly");                
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Error write SPI: {0}", ex);
+            }
+        }
+
 
         /***************************************************************************//**
          * @brief Writes the value to a register.
@@ -56,9 +161,13 @@ namespace MultiGen
         {
             try
             {
-                //Spi.enableCs(SPI.EnableChip.AD9834);
-                Spi.writeSpi(regValue, SPI.EnableChip.AD9834);
-                //Spi.enableCs(SPI.EnableChip.OffAll);
+                byte[] data = { 0x03, 0x00, 0x00 };
+
+                data[1] = (byte)((regValue & 0xFF00) >> 8);
+                data[2] = (byte)((regValue & 0x00FF) >> 0);
+                CsAD9834.Write(GpioPinValue.Low);
+                AD9834_spi.Write(data);
+                CsAD9834.Write(GpioPinValue.High);      
                 Debug.WriteLine("Write register complete");
             } 
             catch(Exception ex)
@@ -99,7 +208,7 @@ namespace MultiGen
             }
             catch(Exception ex)
             {
-                Debug.WriteLine("Error reset AD9834: {0}", ex.Message);
+                Debug.WriteLine("Error reset AD9834: {0}", ex);
             }
         }
 
@@ -117,7 +226,7 @@ namespace MultiGen
             }
             catch(Exception ex)
             {
-                Debug.WriteLine("Error clear reset AD9834: {0}", ex.Message);
+                Debug.WriteLine("Error clear reset AD9834: {0}", ex);
             }
         }
 
@@ -131,19 +240,17 @@ namespace MultiGen
          * @return  None.    
         *******************************************************************************/
         public void AD9834_SetFrequency(ushort reg, ulong val)
-        {
-            
+        {            
             try
-            {
-                SPI SPI = new SPI();
-                ulong regFreq = (val * 2 ^ 28) / 50000000;
+            {                
+                ulong regFreq = (val * 268435456) / 50000000;
                 ushort freqHi = reg;
                 ushort freqLo = reg;
                 freqHi = (ushort)(freqHi | (regFreq & 0xFFFC000) >> 14);
                 freqLo = (ushort)(freqLo | (regFreq & 0x3FFF));
-                SPI.writeSpi(AD9834_B28, SPI.EnableChip.AD9834);
-                SPI.writeSpi(freqLo, SPI.EnableChip.AD9834);
-                SPI.writeSpi(freqHi, SPI.EnableChip.AD9834);
+                AD9834_SetRegisterValue(AD9834_B28);
+                AD9834_SetRegisterValue(freqLo);
+                AD9834_SetRegisterValue(freqHi);
             }
             catch (Exception ex)
             {
@@ -195,19 +302,19 @@ namespace MultiGen
                 {
                     if(freq == 1)
                     {
-                        Spi.writeFSELEC(SPI.enableRegister.FselecOn);
+                        FSelect.Write(GpioPinValue.High);
                     }
                     else
                     {
-                        Spi.writeFSELEC(SPI.enableRegister.FselectOff);
+                        FSelect.Write(GpioPinValue.Low);
                     }
                     if(phase == 1)
                     {
-                        Spi.writePSELEC(SPI.enableRegister.PselectOn);
+                        PSelect.Write(GpioPinValue.High);
                     }
                     else
                     {
-                        Spi.writePSELEC(SPI.enableRegister.PselectOff);
+                        PSelect.Write(GpioPinValue.Low);
                     }
                 }
                 AD9834_SetRegisterValue(val);

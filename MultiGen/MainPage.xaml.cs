@@ -22,23 +22,24 @@ namespace MultiGen
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        SPI SPi = new SPI();
         AD5660_DAC Dac = new AD5660_DAC();
         AD9834 wave = new AD9834();
         
 
         public MainPage()
         {
-            this.InitializeComponent();
-            SPi.InitAll();
-            //Spi.writeSpi(0x22);                
+            this.InitializeComponent();            
+            wave.InitAD9834().GetAwaiter();
+            Dac.initDac().GetAwaiter();            
         }
 
         private void button_Click(object sender, RoutedEventArgs e)
         {
-            //SPi.writeSpi(0x22, SPI.EnableChip.AD9834);
             wave.AD9834_SetFrequency(0, 1);
-            //SPi.enableCs(SPI.EnableChip.AD9834);
+            wave.AD9834_SetPhase(0, 180);
+            wave.AD9834_Setup(0, 0, AD9834.AD9834_OUT_SINUS, 0);
+            Dac.writeAmplitude(1.2);
+            Dac.writeOffset(0.4);          
         }
     }
 }
