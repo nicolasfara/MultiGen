@@ -21,13 +21,30 @@ namespace MultiGen
             Dac.initDac().GetAwaiter();            
         }
 
-        private void button_Click(object sender, RoutedEventArgs e)
+
+
+        private void Triangular_Click(object sender, RoutedEventArgs e)
         {
-            wave.AD9834_SetFrequency(0, 1);
-            wave.AD9834_SetPhase(0, 180);
-            wave.AD9834_Setup(0, 0, AD9834.AD9834_OUT_SINUS, 0);
-            Dac.writeAmplitude(1.2);
-            Dac.writeOffset(0.4);          
+            wave.AD9834_Setup(AD9834.AD9834_FSEL0, AD9834.AD9834_PSEL0, AD9834.AD9834_OUT_TRIANGLE, 0);
+        }
+
+        private void Sine_Click(object sender, RoutedEventArgs e)
+        {
+            wave.AD9834_Setup(AD9834.AD9834_FSEL0, AD9834.AD9834_PSEL0, AD9834.AD9834_OUT_SINUS, 0);
+        }
+
+        private void FrequencyBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ulong frequency = 0;
+            ulong.TryParse(FrequencyBox.Text, out frequency);
+            wave.AD9834_SetFrequency(0, frequency);
+        }
+
+        private void OffsetBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ulong Offset = 0;
+            ulong.TryParse(OffsetBox.Text, out Offset);
+            Dac.writeOffset(Offset);
         }
     }
 }

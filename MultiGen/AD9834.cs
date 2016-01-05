@@ -5,6 +5,7 @@ using Windows.Devices.Enumeration;
 using Windows.Devices.Spi;
 using Windows.Devices.Gpio;
 
+
 namespace MultiGen
 {
     public class AD9834
@@ -24,17 +25,20 @@ namespace MultiGen
         public const ushort AD9834_FSEL1 = (1 << 11);
         public const ushort AD9834_PSEL0 = (0 << 10);
         public const ushort AD9834_PSEL1 = (1 << 10);
-        private const ushort AD9834_CMD_PIN = (1 << 9);
-        private const ushort AD9834_CMD_SW = (0 << 9);
-        private const ushort AD9834_RESET = (1 << 8);
-        private const ushort AD9834_SLEEP1 = (1 << 7);
-        private const ushort AD9834_SLEEP12 = (1 << 6);
-        private const ushort AD9834_OPBITEN = (1 << 5);
-        private const ushort AD9834_SIGN_PIB = (1 << 4);
-        private const ushort AD9834_DIV2 = (1 << 3);
-        private const ushort AD9834_MODE = (1 << 1);
-        public const ushort AD9834_OUT_SINUS = ((0 << 5) | (0 << 1));
-        public const ushort AD9834_OUT_TRIANGLE = ((0 << 5) | (1 << 1));
+        public const ushort AD9834_CMD_PIN = (1 << 9);
+        public const ushort AD9834_CMD_SW = (0 << 9);
+        public const ushort AD9834_RESET = (1 << 8);
+        public const ushort AD9834_SLEEP1 = (1 << 7);
+        public const ushort AD9834_SLEEP12 = (1 << 6);
+        public const ushort AD9834_OPBITEN = (1 << 5);
+        public const ushort AD9834_SIGN_PIB = (1 << 4);
+        public const ushort AD9834_DIV2 = (1 << 3);
+        public const ushort AD9834_MODE = (1 << 1);
+        public const ushort AD9834_OUT_SINUS = ((0 << 5) | (0 << 1) | AD9834_B28);
+        public const ushort AD9834_OUT_TRIANGLE = ((0 << 5) | (1 << 1) | AD9834_B28);
+        public const ushort AD9834_OUT_SQUARE = (AD9834_OPBITEN | AD9834_SIGN_PIB | AD9834_DIV2);
+
+        ushort controlMask = 0x0000;
 
         private const int CS0 = 26;
         private const int FSELECT = 5;
@@ -60,7 +64,7 @@ namespace MultiGen
             {
                 var settings = new SpiConnectionSettings(SPI_CHIP_SELECT_LINE);
                 settings.ClockFrequency = 1000000;
-                settings.Mode = SpiMode.Mode0;
+                //settings.Mode = SpiMode.Mode0;
 
                 string spiAqs = SpiDevice.GetDeviceSelector(SPI_CONTROLLER_NAME);
                 var dis = await DeviceInformation.FindAllAsync(spiAqs);
@@ -157,13 +161,10 @@ namespace MultiGen
         {
             try
             {
-                byte[] data = { 0x03, 0x00, 0x00 };
-
-                data[1] = (byte)((regValue & 0xFF00) >> 8);
-                data[2] = (byte)((regValue & 0x00FF) >> 0);
-                CsAD9834.Write(GpioPinValue.Low);
-                AD9834_spi.Write(data);
-                CsAD9834.Write(GpioPinValue.High);      
+                byte[] data = new byte[] { 0x00, 0x00 };
+                data[0] = (byte)((regValue & 0xFF00) >> 8);
+                data[1] = (byte)((regValue & 0x00FF) >> 0);
+                AD9834_spi.Write(data);      
                 Debug.WriteLine("Write register complete");
             } 
             catch(Exception ex)
@@ -242,11 +243,15 @@ namespace MultiGen
                 ulong regFreq = (val * 268435456) / 50000000;
                 ushort freqHi = reg;
                 ushort freqLo = reg;
-                freqHi = (ushort)(freqHi | (regFreq & 0xFFFC000) >> 14);
-                freqLo = (ushort)(freqLo | (regFreq & 0x3FFF));
-                AD9834_SetRegisterValue(AD9834_B28);
+                freqHi = (ushort)((regFreq >> 14) & 0x3FFF);
+                freqLo = (ushort)(regFreq & 0x3FFF);
+                freqHi = (ushort)(freqHi | 0x4000);
+                freqLo = (ushort)(freqLo | 0x4000);
+                CsAD9834.Write(GpioPinValue.Low);
+                AD9834_SetRegisterValue((ushort)(AD9834_B28 | controlMask));
                 AD9834_SetRegisterValue(freqLo);
                 AD9834_SetRegisterValue(freqHi);
+                CsAD9834.Write(GpioPinValue.High);
             }
             catch (Exception ex)
             {
@@ -293,27 +298,12 @@ namespace MultiGen
             try
             {
                 ushort val = 0;
+                controlMask = (ushort)(controlMask & 0xFFFD);
                 val = (ushort)(freq | phase | type | commandType);
-                if(commandType == 1)
-                {
-                    if(freq == 1)
-                    {
-                        FSelect.Write(GpioPinValue.High);
-                    }
-                    else
-                    {
-                        FSelect.Write(GpioPinValue.Low);
-                    }
-                    if(phase == 1)
-                    {
-                        PSelect.Write(GpioPinValue.High);
-                    }
-                    else
-                    {
-                        PSelect.Write(GpioPinValue.Low);
-                    }
-                }
-                AD9834_SetRegisterValue(val);
+                controlMask = (ushort)(val | controlMask);
+                CsAD9834.Write(GpioPinValue.Low);
+                AD9834_SetRegisterValue(controlMask);
+                CsAD9834.Write(GpioPinValue.High);
             }
             catch(Exception ex)
             {

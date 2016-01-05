@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" IgnorableNamespaces="uap mp">
-  <Identity Name="8f8c1a23-fd51-4fad-852a-d38f35077cef" Publisher="CN=Nicolas Farabegoli" Version="1.0.0.0" />
+  <Identity Name="MutliGen" Publisher="CN=Nicolas Farabegoli" Version="1.0.15.0" />
   <mp:PhoneIdentity PhoneProductId="8f8c1a23-fd51-4fad-852a-d38f35077cef" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
     <DisplayName>MultiGen</DisplayName>
@@ -19,6 +19,9 @@
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png">
         </uap:DefaultTile>
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
+        <uap:InitialRotationPreference>
+          <uap:Rotation Preference="landscape" />
+        </uap:InitialRotationPreference>
       </uap:VisualElements>
     </Application>
   </Applications>

@@ -109,10 +109,20 @@ namespace MultiGen
         {
             try
             {
-                ushort resolution = 65535;  //Resolution bit of AD5660 2^16
+                /*ushort resolution = 65535;  //Resolution bit of AD5660 2^16
                 ushort word = (ushort)((resolution / 10) * (offset + 5));   //formula to calculate a digital value for AD5660. Output +/-5V  
                 byte[] wordHi = { (byte)((word & 0xFF00) >> 8) };
                 byte[] wordLo = { (byte)((word & 0x00FF) >> 0) };  
+                CsAD5660_O.Write(GpioPinValue.Low);
+                SpiDac.Write(wordHi);
+                SpiDac.Write(wordLo);
+                CsAD5660_O.Write(GpioPinValue.High);
+                Debug.WriteLine("AD5660 write offset complete");*/
+                ushort resolution = 4095;
+                ushort word = (ushort)((resolution / 10) * (offset + 5));
+                word = (ushort) ((word << 2) & 0x3FFF);
+                byte[] wordHi = { (byte)((word & 0xFF00) >> 8) };
+                byte[] wordLo = { (byte)((word & 0x00FF) >> 8) };
                 CsAD5660_O.Write(GpioPinValue.Low);
                 SpiDac.Write(wordHi);
                 SpiDac.Write(wordLo);
@@ -137,8 +147,18 @@ namespace MultiGen
         {
             try
             {
-                ushort resolution = 15728;  //correspond (in digital value) to 1.20V, max analog value for AD5660 (vref AD9834)
+                /*ushort resolution = 15728;  //correspond (in digital value) to 1.20V, max analog value for AD5660 (vref AD9834)
                 ushort word = (ushort)(((1.20 - (amplitude / 10)) * resolution) / 1.20);  //formula to calculate the digital value for amplitude
+                byte[] wordHi = { (byte)((word & 0xFF00) >> 8) };
+                byte[] wordLo = { (byte)((word & 0x00FF) >> 8) };
+                CsAD5660_A.Write(GpioPinValue.Low);
+                SpiDac.Write(wordHi);
+                SpiDac.Write(wordLo);
+                CsAD5660_A.Write(GpioPinValue.High);
+                Debug.WriteLine("AD5660 write amplitude complete");*/
+                int resolution = 983;
+                int word = (ushort)(((1.20 - (amplitude / 10)) * resolution) / 1.20);
+                word = (word << 2) & 0x3FFF;
                 byte[] wordHi = { (byte)((word & 0xFF00) >> 8) };
                 byte[] wordLo = { (byte)((word & 0x00FF) >> 8) };
                 CsAD5660_A.Write(GpioPinValue.Low);
