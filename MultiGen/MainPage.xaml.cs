@@ -16,7 +16,7 @@ namespace MultiGen
 
         public MainPage()
         {
-            this.InitializeComponent();            
+            InitializeComponent();            
             wave.InitAD9834().GetAwaiter();
             Dac.initDac().GetAwaiter();            
         }
@@ -44,6 +44,10 @@ namespace MultiGen
         {
             ulong Offset = 0;
             ulong.TryParse(OffsetBox.Text, out Offset);
+            if(Offset > 5)
+            {
+                Offset = 0;
+            }
             Dac.writeOffset(Offset);
         }
     }
