@@ -42,13 +42,29 @@ namespace MultiGen
 
         private void OffsetBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            ulong Offset = 0;
-            ulong.TryParse(OffsetBox.Text, out Offset);
-            if(Offset > 5)
+            long Offset = 0;
+            long.TryParse(OffsetBox.Text, out Offset);
+            if(Offset > 5 || Offset < -5)
             {
                 Offset = 0;
             }
             Dac.writeOffset(Offset);
+        }
+
+        private void Amplitude_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            long Amplitu = 0;
+            long.TryParse(Amplitude.Text, out Amplitu);
+            if(Amplitu > 12 || Amplitu < 0)
+            {
+                Amplitu = 0;
+            }
+            Dac.writeAmplitude(Amplitu);
+        }
+
+        private void Square_Click(object sender, RoutedEventArgs e)
+        {
+            wave.AD9834_Setup(AD9834.AD9834_FSEL0, AD9834.AD9834_PSEL0, AD9834.AD9834_OUT_SQUARE, 0);
         }
     }
 }
