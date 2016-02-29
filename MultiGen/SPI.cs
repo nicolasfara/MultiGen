@@ -119,13 +119,13 @@ namespace MultiGen
         {
             try
             {
-                InitGpio();
                 await InitSpi();
+                InitGpio();                
                 Debug.WriteLine("Inizialized");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine("Initialization fail:", ex.Message);
+                Debug.WriteLine("Initialization fail: "+ ex.Message);
             }
         }
 
@@ -161,7 +161,7 @@ namespace MultiGen
             }
         }
 
-
+        /* Write data on SPI */
         public void writeSpi(ushort reg)
         {
             try
@@ -177,7 +177,7 @@ namespace MultiGen
             }
         }
 
-
+        /* Write on phase register */
         public void writePSELEC(enableRegister select)
         {
             if ((int)select == 1)
@@ -190,7 +190,7 @@ namespace MultiGen
             }
         }
 
-
+        /*Write on frequency register */
         public void writeFSELEC(enableRegister select)
         {
             if ((int)select == 1)
